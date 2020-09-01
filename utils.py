@@ -8,7 +8,7 @@ def sigmoid(x):
     return:
         激活后数据
     '''
-    return 1 / (1 + np.exp(-x))
+    return 1 / (1 + np.exp(-1 * x))
 
 def relu(x):
     '''
@@ -45,7 +45,7 @@ def meanSquareError(x, t):
     return:
         损失程度
     '''
-    return 0.5 * np.sum((x-t) ** 2)
+    return 0.5 * np.sum((x - t) ** 2)
 
 def crossEntropyError(x, t):
     '''
@@ -57,7 +57,7 @@ def crossEntropyError(x, t):
         损失程度
     '''
     h = 1e-7
-    return -np.sum(t * np.log(x + h))
+    return -1 * np.sum(t * np.log(x + h))
 
 def partialDerivative(x, f):
     '''
@@ -81,3 +81,66 @@ def partialDerivative(x, f):
         ret[index] = (f1 - f2) / 2 / h
         iterator.iternext()
     return ret
+
+
+class SigmoidLayer():
+
+    def __init__(self):
+        self.out = None
+
+    def forward(self, x):
+        out = sigmoid(x)
+        self.out = out
+        return out
+
+    def backward(self, dOut):
+        return dOut * self.out * (1 - self.out)
+
+    def test(self, x):
+        '''
+        sl = SigmoidLayer()
+        sl.test(np.array([2.0]))
+        '''
+        dp = partialDerivative(x, sigmoid)
+        self.forward(x)
+        dt = self.backward(1)
+        print(dp)
+        print(dt)
+
+class Affine():
+
+    def __init__(self, W, b):
+        self.W = W
+        self.b = b
+        self.dW = None
+        self.db = None
+        self.x = None
+
+    def forward(self, x):
+        out = np.dot(x, self.W) + self.b
+        self.x = x
+        return out
+
+    def backward(self, dOut):
+        dx = np.dot(dOut, self.W.T)
+        self.dW = np.dot(self.x.T, dOut)
+        self.db = np.sum(dOut, axis=0)
+        return dx
+
+class Swl():
+
+    def __init__(self):
+        self.y = None
+        self.t = None
+        self.loss = None
+
+    def forward(self, x, t):
+        self.y = softmax(x)
+        self.t = t
+        loss = crossEntropyError(y, t)
+        self.loss = loss
+        return loss
+
+    def backward(self):
+        size = self.t.shape[0]
+        return (self.y - self.t) / size

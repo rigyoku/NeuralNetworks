@@ -143,3 +143,12 @@ class SgdNet:
         output = np.argmax(output, axis=1)
         hots = np.argmax(hots, axis=1)
         return np.sum(output == hots) / output.shape[0]
+
+
+def LayerNet():
+
+    def __init__(self):
+        pass
+
+    def derivative(self):
+        pass
