@@ -34,7 +34,7 @@ def softmax(x):
         输出数据或称为概率
     '''
     max = np.max(x)
-    return np.exp(x - max) / np.sum(np.exp(x - max))
+    return np.exp(x - max) / np.sum(np.exp(x - max), axis=0)
 
 def meanSquareError(x, t):
     '''
@@ -96,17 +96,6 @@ class SigmoidLayer():
     def backward(self, dOut):
         return dOut * self.out * (1 - self.out)
 
-    def test(self, x):
-        '''
-        sl = SigmoidLayer()
-        sl.test(np.array([2.0]))
-        '''
-        dp = partialDerivative(x, sigmoid)
-        self.forward(x)
-        dt = self.backward(1)
-        print(dp)
-        print(dt)
-
 class Affine():
 
     def __init__(self, W, b):
@@ -137,10 +126,12 @@ class Swl():
     def forward(self, x, t):
         self.y = softmax(x)
         self.t = t
-        loss = crossEntropyError(y, t)
+        loss = crossEntropyError(self.y, t)
         self.loss = loss
         return loss
 
     def backward(self):
         size = self.t.shape[0]
+        if self.t.ndim == 1:
+            size = 1
         return (self.y - self.t) / size
