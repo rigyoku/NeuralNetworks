@@ -34,7 +34,12 @@ def softmax(x):
         输出数据或称为概率
     '''
     max = np.max(x)
-    return np.exp(x - max) / np.sum(np.exp(x - max), axis=0)
+    if x.ndim == 1:
+        sum = np.sum(np.exp(x - max))
+    else:
+        sum = np.sum(np.exp(x - max), axis=1)
+        sum = sum.reshape(sum.size, 1)
+    return np.exp(x - max) / sum
 
 def meanSquareError(x, t):
     '''
