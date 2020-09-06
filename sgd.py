@@ -7,7 +7,7 @@ configPath = './resource/conf.pic'
 
 class SgdNet:
 
-    def __init__(self, inputNum, outputNum, load=False, *hidden):
+    def __init__(self, inputNum, outputNum, load=False, weight=0.01, *hidden):
         '''
         构造方法,初始化权重和偏置
         params:
@@ -15,6 +15,7 @@ class SgdNet:
             inputNum    输入层节点数
             outputNum   输出层节点数
             load        是否读取以前的配置
+            weight      初始化权重的倍率
             *hidden     隐藏层节点数
         '''
         # 参数是True且路径存在则读取pic文件
@@ -30,11 +31,11 @@ class SgdNet:
         index = -1
         # 遍历为隐藏层赋值
         for index,val in enumerate(hidden):
-            config['W' + str(index + 1)] = np.random.rand(forward, val)
+            config['W' + str(index + 1)] = weight * np.random.randn(forward, val)
             config['b' + str(index + 1)] = np.zeros(val)
             forward = val
         # 为最后一层权重和参数赋值
-        config['W' + str(index + 2)] = np.random.rand(forward, outputNum)
+        config['W' + str(index + 2)] = weight * np.random.randn(forward, outputNum)
         config['b' + str(index + 2)] = np.zeros(outputNum)
         # 记录该字典
         self.config = config
@@ -147,7 +148,7 @@ class SgdNet:
 
 class LayerNet:
 
-    def __init__(self, inputNum, outputNum, load=False, *hidden):
+    def __init__(self, inputNum, outputNum, load=False, weight=0.01, *hidden):
         '''
         构造方法,初始化权重和偏置以及反向传播层级
         params:
@@ -155,6 +156,7 @@ class LayerNet:
             inputNum    输入层节点数
             outputNum   输出层节点数
             load        是否读取以前的配置
+            weight      初始化权重的倍率
             *hidden     隐藏层节点数
         '''
         # 参数是True且路径存在则读取pic文件
@@ -170,11 +172,11 @@ class LayerNet:
             index = -1
             # 遍历为隐藏层赋值
             for index,val in enumerate(hidden):
-                config['W' + str(index + 1)] = np.random.rand(forward, val)
+                config['W' + str(index + 1)] = weight * np.random.randn(forward, val)
                 config['b' + str(index + 1)] = np.zeros(val)
                 forward = val
             # 为最后一层权重和参数赋值
-            config['W' + str(index + 2)] = np.random.rand(forward, outputNum)
+            config['W' + str(index + 2)] = weight * np.random.randn(forward, outputNum)
             config['b' + str(index + 2)] = np.zeros(outputNum)
             # 记录该字典
             self.config = config
