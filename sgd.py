@@ -102,7 +102,7 @@ class SgdNet:
             learn       学习长度
             times       学习次数
         return:
-            每次batch得到的损失函数
+            每次batch得到的损失函数结果和正确率
         '''
         # 每次batch得到的损失函数
         loss = []
@@ -228,22 +228,23 @@ class LayerNet:
         '''
         # 使用softmax-with-loss层求得dl
         swl = utils.Swl()
-        swl.forward(self.output(input), hots)
-        temp = swl.backward()
-        # 由于层级是 affine - [sigmoid-affine]*n 形式,倒叙遍历之后偶数项为affine层,奇数项为sigmoid层
-        for index, layer in enumerate(reversed(self.layers)):
-            if index % 2 == 0:
-                # affine层
-                # 对x的导数用于向前传播
-                temp = layer.backward(temp)
-                confIndex = str(int((len(self.config) - index) / 2))
-                # 权重和偏置的导数直接学习[沿梯度前进]
-                self.config['W' + confIndex] = self.config['W' + confIndex] - layer.dW * learn
-                self.config['b' + confIndex] = self.config['b' + confIndex] - layer.db * learn
-            else:
-                # sigmoid层
-                # 只需要向前传播对x的导数
-                temp = layer.backward(temp)
+        for index in range(0, times):
+            swl.forward(self.output(input), hots)
+            temp = swl.backward()
+            # 由于层级是 affine - [sigmoid-affine]*n 形式,倒叙遍历之后偶数项为affine层,奇数项为sigmoid层
+            for index, layer in enumerate(reversed(self.layers)):
+                if index % 2 == 0:
+                    # affine层
+                    # 对x的导数用于向前传播
+                    temp = layer.backward(temp)
+                    confIndex = str(int((len(self.config) - index) / 2))
+                    # 权重和偏置的导数直接学习[沿梯度前进]
+                    self.config['W' + confIndex] = self.config['W' + confIndex] - layer.dW * learn
+                    self.config['b' + confIndex] = self.config['b' + confIndex] - layer.db * learn
+                else:
+                    # sigmoid层
+                    # 只需要向前传播对x的导数
+                    temp = layer.backward(temp)
         with open(configPath, 'wb') as conf:
             pickle.dump(self.config, conf, -1)
 
@@ -258,7 +259,7 @@ class LayerNet:
             learn       每个batch学习长度
             times       每个batch学习次数
         return:
-            每次batch得到的损失函数
+            每次batch得到的损失函数结果和正确率
         '''
         # 每次batch得到的损失函数
         loss = []
@@ -296,6 +297,6 @@ class LayerNet:
         return:
             正确率
         '''
-        output = np.argmax(output, axis=0)
-        hots = np.argmax(hots, axis=0)
+        output = np.argmax(output, axis=1)
+        hots = np.argmax(hots, axis=1)
         return np.sum(output == hots) / output.shape[0]
