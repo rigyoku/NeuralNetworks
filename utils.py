@@ -62,7 +62,11 @@ def crossEntropyError(x, t):
         损失程度
     '''
     h = 1e-7
-    return -1 * np.sum(t * np.log(x + h))
+    if x.ndim == 1:
+        size = 1
+    else:
+        size = x.shape[0]
+    return -1 * np.sum(t * np.log(x + h)) / size
 
 def partialDerivative(x, f):
     '''
@@ -99,7 +103,7 @@ class SigmoidLayer():
         return out
 
     def backward(self, dOut):
-        return dOut * self.out * (1 - self.out)
+        return dOut * (1.0 - self.out) * self.out
 
 class Affine():
 

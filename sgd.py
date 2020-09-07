@@ -5,6 +5,7 @@ import os
 
 configPath = './resource/conf.pic'
 
+"""
 class SgdNet:
 
     def __init__(self, inputNum, outputNum, load=False, weight=0.01, *hidden):
@@ -144,7 +145,7 @@ class SgdNet:
         output = np.argmax(output, axis=1)
         hots = np.argmax(hots, axis=1)
         return np.sum(output == hots) / output.shape[0]
-
+"""
 
 class LayerNet:
 
@@ -163,6 +164,7 @@ class LayerNet:
         if load and os.path.exists(configPath):
             with open(configPath, 'rb') as conf:
                 self.config = pickle.load(conf)
+        # 否则新建权重和偏置
         else:
             # 权重和偏置的字典
             config = {}
@@ -180,12 +182,24 @@ class LayerNet:
             config['b' + str(index + 2)] = np.zeros(outputNum)
             # 记录该字典
             self.config = config
+        # 隐藏层数量
+        hiddenSize = int(len(self.config) / 2) - 1
+        # 初始化传播层级
+        self.initLayer(hiddenSize)
+
+    def initLayer(self, hiddenSize):
+        '''
+        初始化传播层级,防止更新config时层级信息不变
+        params:
+            self        实例本身
+            inputNum    隐藏层数量
+        '''
         # 反向传播层
         layers = []
         # 第一层一定是affine层
         layers.append(utils.Affine(self.config['W1'], self.config['b1']))
         # 遍历隐藏层,每个隐藏层对应一个sigmoid层和affine层
-        for index,val in enumerate(hidden):
+        for index in range(0, hiddenSize):
             layers.append(utils.SigmoidLayer())
             layers.append(utils.Affine(self.config['W' + str(index + 2)], self.config['b' + str(index + 2)]))
         # 记录层级字典
@@ -247,8 +261,8 @@ class LayerNet:
                     # sigmoid层
                     # 只需要向前传播对x的导数
                     temp = layer.backward(temp)
-        with open(configPath, 'wb') as conf:
-            pickle.dump(self.config, conf, -1)
+            # 更新完参数需要更新层级信息
+            self.initLayer(int((len(self.layers) - 1) / 2))
 
     def batchLearn(self, inDatas, hotDatas, length, learn, times):
         '''
@@ -261,9 +275,9 @@ class LayerNet:
             learn       每个batch学习长度
             times       每个batch学习次数
         return:
-            每次batch得到的损失函数结果和正确率
+            损失函数结果和正确率
         '''
-        # 每次batch得到的损失函数
+        # 损失函数结果
         loss = []
         # 对源数据进行首维度的随机排列
         index = np.random.permutation(range(0, inDatas.shape[0]))
@@ -286,7 +300,11 @@ class LayerNet:
             loss.append(self.getLoss(input, hots))
             # 更新开始位置
             start = end
+        # 计算当前数据正确率
         correctRate = self.correctRate(self.output(input), hots)
+        # 保存学习结果
+        with open(configPath, 'wb') as conf:
+            pickle.dump(self.config, conf, -1)
         return loss,correctRate
 
     def correctRate(self, output, hots):
