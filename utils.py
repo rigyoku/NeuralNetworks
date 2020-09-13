@@ -93,7 +93,9 @@ def partialDerivative(x, f):
 
 
 class SigmoidLayer():
-
+    '''
+    sigmoid层,正向传播时记录结果值,反向传播根据正向结果计算导数
+    '''
     def __init__(self):
         self.out = None
 
@@ -106,7 +108,9 @@ class SigmoidLayer():
         return dOut * (1.0 - self.out) * self.out
 
 class Affine():
-
+    '''
+    衍射层,正向传播记录变量x,反向传播根据x的转置计算导数
+    '''
     def __init__(self, W, b):
         self.W = W
         self.b = b
@@ -126,7 +130,9 @@ class Affine():
         return dx
 
 class Swl():
-
+    '''
+    softmax-with-loss[交叉熵]层,正向传播记录输出值和正确hots,反向传播根据输出和hots计算导数
+    '''
     def __init__(self):
         self.y = None
         self.t = None
@@ -144,3 +150,41 @@ class Swl():
         if self.t.ndim == 1:
             size = 1
         return (self.y - self.t) / size
+
+class update():
+    '''
+    根据梯度更新参数的类
+    '''
+    def __init__(self, type = 'SGD', resistance = 0.9):
+        '''
+        初始化
+        params:
+            type        更新方式 SGD/MOM[动量]
+            resistance  动量法的阻力
+        '''
+        self.type = type
+        self.resistance = resistance
+        self.v = {}
+
+    def u(self, t, d, l, i = 0):
+        '''
+        更新参数
+        params:
+            t           原参数
+            d           参数关于当前位置的导数
+            l           学习量
+            i           当前层级名
+        '''
+        if self.type == 'SGD':
+            return self._sgd(t, d, l)
+        elif self.type == 'MOM':
+            return self._momentum(t, d, l, i)
+
+    def _sgd(self, t, d, l):
+        return t - d * l
+
+    def _momentum(self, t, d, l, i):
+        if type(self.v.get(i)) == type(None):
+            self.v[i] = 0.0
+        self.v[i] = self.resistance * self.v[i] - d * l
+        return t + self.v[i]
