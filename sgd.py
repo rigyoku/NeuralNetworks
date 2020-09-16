@@ -244,8 +244,7 @@ class LayerNet:
         '''
         # 使用softmax-with-loss层求得dl
         swl = utils.Swl()
-        # update = utils.update()
-        update = utils.update('MOM')
+        update = utils.Update('MOM')
         for index in range(0, times):
             swl.forward(self.output(input), hots)
             temp = swl.backward()
@@ -257,8 +256,6 @@ class LayerNet:
                     temp = layer.backward(temp)
                     confIndex = str(int((len(self.config) - index) / 2))
                     # 权重和偏置的导数直接学习[沿梯度前进]
-                    # self.config['W' + confIndex] = update.u(self.config['W' + confIndex], layer.dW, learn)
-                    # self.config['b' + confIndex] = update.u(self.config['b' + confIndex], layer.db, learn)
                     self.config['W' + confIndex] = update.u(self.config['W' + confIndex], layer.dW, learn, 'W' + confIndex)
                     self.config['b' + confIndex] = update.u(self.config['b' + confIndex], layer.db, learn, 'b' + confIndex)
                 else:

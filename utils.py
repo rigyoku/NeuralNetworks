@@ -151,7 +151,7 @@ class Swl():
             size = 1
         return (self.y - self.t) / size
 
-class update():
+class Update():
     '''
     根据梯度更新参数的类
     '''
@@ -164,7 +164,10 @@ class update():
         '''
         self.type = type
         self.resistance = resistance
+        # 动量法记录每个参数速度的对象
         self.v = {}
+        # adagrad记录每个参数梯度的对象
+        self.h = {}
 
     def u(self, t, d, l, i = 0):
         '''
@@ -179,12 +182,38 @@ class update():
             return self._sgd(t, d, l)
         elif self.type == 'MOM':
             return self._momentum(t, d, l, i)
+        elif self.type == 'ADAG':
+            return self._adagrad(t, d, l, i)
+        elif self.type == 'ADAM':
+            return self._adam(t, d, l, i)
 
     def _sgd(self, t, d, l):
         return t - d * l
 
     def _momentum(self, t, d, l, i):
+        '''
+        使用动量法更新参数.更新参数时,上一个参数的方向上存在一个速度,由于摩擦力所以该速度略微减少,然后施加一个新的力在当前梯度来增加速度,最终前进方向是2个速度的合并方向.
+        '''
         if type(self.v.get(i)) == type(None):
             self.v[i] = 0.0
         self.v[i] = self.resistance * self.v[i] - d * l
         return t + self.v[i]
+
+    def _adagrad(self, t, d, l, i):
+        '''
+        每次学习记录梯度,每经过一个学习,学习量会减少.
+        '''
+        if type(self.h.get(i)) == type(None):
+            self.h[i] = 0.0
+        self.h[i] = self.h[i] + d * d
+        return t - l * d / (np.sqrt(self.h[i]) + 1e-7)
+
+    def _adam(self, t, d, l, i):
+        if type(self.v.get(i)) == type(None):
+            self.v[i] = 0.0
+        if type(self.h.get(i)) == type(None):
+            self.h[i] = 0.0
+        self.h[i] = self.h[i] + d * d
+        l = l / (np.sqrt(self.h[i]) + 1e-7)
+        self.v[i] = self.resistance * self.v[i] - d * l
+        return self.v[i]
